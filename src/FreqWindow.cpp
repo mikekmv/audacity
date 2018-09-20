@@ -97,6 +97,8 @@ enum {
 
    FreqZoomSliderID,
    FreqPanScrollerID,
+   FreqHorZoomSliderID,
+   FreqHorPanScrollerID,
    FreqExportButtonID,
    FreqAlgChoiceID,
    FreqSizeChoiceID,
@@ -365,27 +367,71 @@ FreqWindow::FreqWindow(wxWindow * parent, wxWindowID id,
 
       S.AddSpace(1);
 
-      S.StartHorizontalLay(wxEXPAND, 0);
-      {
-         hRuler  = safenew RulerPanel(
-            this, wxID_ANY, wxHORIZONTAL,
-            wxSize{ 100, 100 }, // Ruler can't handle small sizes
-            RulerPanel::Range{ 10, 20000 },
-            Ruler::RealFormat,
-            _("Hz"),
-            RulerPanel::Options{}
-               .Log(true)
-               .Flip(true)
-               .LabelEdges(true)
-               .TickColour( theTheme.Colour( clrGraphLabels ) )
-         );
+	  S.StartVerticalLay(wxEXPAND, 0);
+	  {
+	      S.StartHorizontalLay(wxEXPAND, 0);
+		  {
+			 hRuler  = safenew RulerPanel(
+				this, wxID_ANY, wxHORIZONTAL,
+	            wxSize{ 100, 100 }, // Ruler can't handle small sizes
+		        RulerPanel::Range{ 10, 20000 },
+			    Ruler::RealFormat,
+				_("Hz"),
+				RulerPanel::Options{}
+	               .Log(true)
+		           .Flip(true)
+			       .LabelEdges(true)
+				   .TickColour( theTheme.Colour( clrGraphLabels ) )
+	         );
 
-         S.AddSpace(1, wxDefaultCoord);
-         S.Prop(1);
-         S.AddWindow(hRuler, wxALIGN_LEFT | wxALIGN_TOP);
-         S.AddSpace(1, wxDefaultCoord);
-      }
-      S.EndHorizontalLay();
+	         S.AddSpace(1, wxDefaultCoord);
+		     S.Prop(1);
+			 S.AddWindow(hRuler, wxALIGN_LEFT | wxALIGN_TOP);
+	         S.AddSpace(1, wxDefaultCoord);
+		  }
+		S.EndHorizontalLay();
+
+		S.StartHorizontalLay();
+		{
+			mHorPanScroller = safenew wxScrollBar(this, FreqHorPanScrollerID,
+				 wxDefaultPosition, wxDefaultSize, wxSB_HORIZONTAL);
+#if wxUSE_ACCESSIBILITY
+			// so that name can be set on a standard control
+			mHorPanScroller->SetAccessible(safenew WindowAccessible(mHorPanScroller));
+#endif
+			mHorPanScroller->SetName(_("Scroll"));
+			S.Prop(1);
+			S.AddWindow(mHorPanScroller, wxALIGN_LEFT | wxTOP);
+		}
+		S.EndHorizontalLay();
+
+		S.StartHorizontalLay();
+		{
+			wxStaticBitmap *zo = safenew wxStaticBitmap(this, wxID_ANY, wxBitmap(ZoomOut));
+			S.AddWindow((wxWindow *)zo, wxALIGN_CENTER);
+
+			S.AddSpace(5);
+
+			mHorZoomSlider = safenew wxSlider(this, FreqHorZoomSliderID, 100, 1, 100,
+				wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL);
+			S.Prop(1);
+			S.AddWindow(mHorZoomSlider, wxALIGN_CENTER_VERTICAL);
+#if wxUSE_ACCESSIBILITY
+			// so that name can be set on a standard control
+			mHorZoomSlider->SetAccessible(safenew WindowAccessible(mHorZoomSlider));
+#endif
+			mHorZoomSlider->SetName(_("Zoom F"));
+
+			S.AddSpace(4);
+
+			wxStaticBitmap *zi = safenew wxStaticBitmap(this, wxID_ANY, wxBitmap(ZoomIn));
+			S.AddWindow((wxWindow *)zi, wxALIGN_CENTER);
+		}
+		S.EndHorizontalLay();
+
+		S.AddSpace(4, wxDefaultCoord);
+	  }
+	  S.EndVerticalLay();
 
       S.AddSpace(1);
 

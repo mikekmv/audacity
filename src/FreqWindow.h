@@ -43,7 +43,7 @@ class RulerPanel;
 
 DECLARE_EXPORTED_EVENT_TYPE(AUDACITY_DLL_API, EVT_FREQWINDOW_RECALC, -1);
 
-#define MAX_SAMPLE_BUFFER_SIZE (64*1024*1024)
+#define MAX_SAMPLE_BUFFER_SIZE (32*1024*1024)
 
 class SpectrumAnalyst
 {
@@ -198,6 +198,8 @@ private:
    wxChoice *mAxisChoice;
    wxScrollBar *mPanScroller;
    wxSlider *mZoomSlider;
+   wxScrollBar *mHorPanScroller;
+   wxSlider *mHorZoomSlider;
    wxTextCtrl *mCursorText;
    wxTextCtrl *mPeakText;
 
