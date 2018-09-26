@@ -97,8 +97,6 @@ enum {
 
    FreqZoomSliderID,
    FreqPanScrollerID,
-   FreqHorZoomSliderID,
-   FreqHorPanScrollerID,
    FreqExportButtonID,
    FreqAlgChoiceID,
    FreqSizeChoiceID,
@@ -391,36 +389,36 @@ FreqWindow::FreqWindow(wxWindow * parent, wxWindowID id,
 		  }
 		S.EndHorizontalLay();
 
-		S.StartHorizontalLay();
+		S.StartHorizontalLay(wxEXPAND, 0);
 		{
-			mHorPanScroller = safenew wxScrollBar(this, FreqHorPanScrollerID,
+			mHorPanScroller = safenew wxScrollBar(this, FreqPanScrollerID,
 				 wxDefaultPosition, wxDefaultSize, wxSB_HORIZONTAL);
 #if wxUSE_ACCESSIBILITY
 			// so that name can be set on a standard control
 			mHorPanScroller->SetAccessible(safenew WindowAccessible(mHorPanScroller));
 #endif
-			mHorPanScroller->SetName(_("Scroll"));
+			mHorPanScroller->SetName(_("Scroll Horizontally"));
 			S.Prop(1);
 			S.AddWindow(mHorPanScroller, wxALIGN_LEFT | wxTOP);
 		}
 		S.EndHorizontalLay();
 
-		S.StartHorizontalLay();
+		S.StartHorizontalLay(wxEXPAND, 0);
 		{
 			wxStaticBitmap *zo = safenew wxStaticBitmap(this, wxID_ANY, wxBitmap(ZoomOut));
 			S.AddWindow((wxWindow *)zo, wxALIGN_CENTER);
 
 			S.AddSpace(5);
 
-			mHorZoomSlider = safenew wxSlider(this, FreqHorZoomSliderID, 100, 1, 100,
-				wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL);
+			mHorZoomSlider = safenew wxSlider(this, FreqZoomSliderID, 1024, 1, 1024,
+				wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL | wxSL_INVERSE);
 			S.Prop(1);
-			S.AddWindow(mHorZoomSlider, wxALIGN_CENTER_VERTICAL);
+			S.AddWindow(mHorZoomSlider, wxALIGN_TOP);
 #if wxUSE_ACCESSIBILITY
 			// so that name can be set on a standard control
 			mHorZoomSlider->SetAccessible(safenew WindowAccessible(mHorZoomSlider));
 #endif
-			mHorZoomSlider->SetName(_("Zoom F"));
+			mHorZoomSlider->SetName(_("Zoom Horizontally"));
 
 			S.AddSpace(4);
 
@@ -782,31 +780,46 @@ void FreqWindow::DrawPlot()
    // Set up x axis ruler
 
    int width = r.width - 2;
+   int hsTotal, hsRange, hsPos;
 
-   float xMin, xMax, xRatio, xStep;
+   float xMin, xMax, xRange, xRatio, xStep, xTotal;
+   float xMinLimit, xMaxLimit;
 
    if (mAlg == SpectrumAnalyst::Spectrum) {
-      xMin = mRate / mWindowSize;
-      xMax = mRate / 2;
-      xRatio = xMax / xMin;
-      if (mLogAxis)
-      {
-         xStep = pow(2.0f, (log(xRatio) / log(2.0f)) / width);
-         hRuler->ruler.SetLog(true);
-      }
-      else
-      {
-         xStep = (xMax - xMin) / width;
-         hRuler->ruler.SetLog(false);
-      }
-      hRuler->ruler.SetUnits(_("Hz"));
-   } else {
-      xMin = 0;
-      xMax = mAnalyst->GetProcessedSize() / mRate;
-      xStep = (xMax - xMin) / width;
-      hRuler->ruler.SetLog(false);
-      hRuler->ruler.SetUnits(_("s"));
+	  xMinLimit = mRate / mWindowSize;
+      xMaxLimit = mRate / 2;
+	  hRuler->ruler.SetUnits(_("Hz"));
    }
+   else {
+      xMinLimit = 0;
+	  xMaxLimit = mAnalyst->GetProcessedSize() / mRate;
+	  hRuler->ruler.SetUnits(_("s"));
+   }
+
+   xRange = xMaxLimit - xMinLimit;
+   xTotal = xRange * ((float)mHorZoomSlider->GetValue() / 1024.0f);
+   hsTotal = xTotal * 1024.0f;
+   hsRange = xRange * 1024.0f;
+   hsPos = mHorPanScroller->GetThumbPosition() + ((mHorPanScroller->GetThumbSize() - hsTotal) / 2);
+   mHorPanScroller->SetScrollbar(hsPos, hsTotal, hsRange, hsTotal);
+
+   xMin = xMinLimit + ((float)hsPos / 1024.0f);
+   if (xMin < xMinLimit)
+	  xMin = xMinLimit;
+   xMax = xMin + xTotal;
+   if (xMax > xMaxLimit)
+	  xMax = xMaxLimit;
+
+   if (mAlg == SpectrumAnalyst::Spectrum && mLogAxis) {
+	  xRatio = xMax / xMin;
+      xStep = pow(2.0f, (log(xRatio) / log(2.0f)) / width);
+      hRuler->ruler.SetLog(true);
+   }
+   else {
+	  xStep = (xMax - xMin) / width;
+	  hRuler->ruler.SetLog(false);
+   }
+
    hRuler->ruler.SetRange(xMin, xMax-xStep);
    hRuler->Refresh(false);
 
