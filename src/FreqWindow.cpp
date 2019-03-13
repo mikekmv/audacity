@@ -233,6 +233,10 @@ FreqWindow::FreqWindow(wxWindow * parent, wxWindowID id,
       wxT("16384") ,
       wxT("32768") ,
       wxT("65536") ,
+      wxT("131072") ,
+      wxT("262144") ,
+      wxT("524288") ,
+      wxT("1048576") ,
    };
 
    wxArrayString funcChoices;
@@ -587,12 +591,12 @@ void FreqWindow::GetAudio()
          auto start = track->TimeToLongSamples(p->mViewInfo.selectedRegion.t0());
          auto end = track->TimeToLongSamples(p->mViewInfo.selectedRegion.t1());
          auto dataLen = end - start;
-         if (dataLen > 10485760) {
+         if (dataLen > MAX_SAMPLE_BUFFER_SIZE) {
             warning = true;
-            mDataLen = 10485760;
+            mDataLen = MAX_SAMPLE_BUFFER_SIZE;
          }
          else
-            // dataLen is not more than 10 * 2 ^ 20
+            // dataLen is not more than 64 * 2 ^ 20 !
             mDataLen = dataLen.as_size_t();
          mData = Floats{ mDataLen };
          // Don't allow throw for bad reads
@@ -1202,13 +1206,14 @@ bool SpectrumAnalyst::Calculate(Algorithm alg, int windowFunc,
 {
    // Wipe old data
    mProcessed.resize(0);
-   mRate = 0.0;
+   mRate = rate;
    mWindowSize = 0;
+   mAlg = alg;
 
    // Validate inputs
    int f = NumWindowFuncs();
 
-   if (!(windowSize >= 32 && windowSize <= 65536 &&
+   if (!(windowSize >= 32 && windowSize <= 1048576 &&
          alg >= SpectrumAnalyst::Spectrum &&
          alg < SpectrumAnalyst::NumAlgorithms &&
          windowFunc >= 0 && windowFunc < f)) {
@@ -1220,9 +1225,7 @@ bool SpectrumAnalyst::Calculate(Algorithm alg, int windowFunc,
    }
 
    // Now repopulate
-   mRate = rate;
    mWindowSize = windowSize;
-   mAlg = alg;
 
    auto half = mWindowSize / 2;
    mProcessed.resize(mWindowSize);
@@ -1454,6 +1457,9 @@ int SpectrumAnalyst::GetProcessedSize() const
 float SpectrumAnalyst::GetProcessedValue(float freq0, float freq1) const
 {
    float bin0, bin1, binwidth;
+
+   if ((mWindowSize == 0) || mRate <= 0.0)
+	   return -1.0;
 
    if (mAlg == Spectrum) {
       bin0 = freq0 * mWindowSize / mRate;

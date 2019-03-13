@@ -43,6 +43,8 @@ class RulerPanel;
 
 DECLARE_EXPORTED_EVENT_TYPE(AUDACITY_DLL_API, EVT_FREQWINDOW_RECALC, -1);
 
+#define MAX_SAMPLE_BUFFER_SIZE (64*1024*1024)
+
 class SpectrumAnalyst
 {
 public:

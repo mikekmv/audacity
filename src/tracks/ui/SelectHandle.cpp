@@ -1337,7 +1337,7 @@ void SelectHandle::StartSnappingFreqSelection
       pTrack->TimeToLongSamples(viewInfo.selectedRegion.t1());
    const auto length =
       std::min(frequencySnappingData.max_size(),
-         limitSampleBufferSize(10485760, // as in FreqWindow.cpp
+         limitSampleBufferSize(MAX_SAMPLE_BUFFER_SIZE, // as in FreqWindow.cpp
             end - start));
    const auto effectiveLength = std::max(minLength, length);
    frequencySnappingData.resize(effectiveLength, 0.0f);
