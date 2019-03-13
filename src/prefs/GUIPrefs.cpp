@@ -62,6 +62,7 @@ void GUIPrefs::GetRangeChoices(
          wxT("96") ,
          wxT("120") ,
          wxT("145") ,
+         wxT("200") ,
       } );
    }
 
@@ -77,6 +78,7 @@ void GUIPrefs::GetRangeChoices(
          _("-96 dB (PCM range of 16 bit samples)") ,
          _("-120 dB (approximate limit of human hearing)") ,
          _("-145 dB (PCM range of 24 bit samples)") ,
+         _("-200 dB (for high resolution FFT)") ,
       } );
    }
 }
